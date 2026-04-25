@@ -381,7 +381,7 @@ elif st.session_state["page"] == "profile":
       st.markdown(
         f"""
         <div style="text-align:center">
-            <div style="font-size:18px; font-weight:bold">{user_posts.shape[0]}</div>
+            <div style="font-size:18px; font-weight:bold">{len(user_posts)}</div>
             <div style="font-size:14px;">Posts</div>
         </div>
         """,
