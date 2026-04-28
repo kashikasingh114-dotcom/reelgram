@@ -11,6 +11,7 @@ Users can sign up, log in, create posts, like, comment, and explore profiles.
 
   * Login & Signup system
   * Public & Private accounts
+  * ![Signup](screenshots/signup.png)
 
 * 🏠 **Feed**
 
