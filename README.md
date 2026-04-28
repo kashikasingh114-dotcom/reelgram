@@ -16,11 +16,13 @@ Users can sign up, log in, create posts, like, comment, and explore profiles.
 
   * View posts from users
   * Like ❤️ and comment 💬 on posts
+  * ![Home](screenshots/home.png)
 
 * 📸 **Post Creation**
 
   * Upload images
   * Add captions
+  * ![Posts](screenshots/posts.png)
 
 * 👤 **Profile**
 
@@ -31,10 +33,12 @@ Users can sign up, log in, create posts, like, comment, and explore profiles.
 * 🔍 **Search**
 
   * Find users by username or name
+  * ![Search](screenshots/search.png)
 
 * 🔒 **Privacy Control**
 
   * Private accounts restrict access to posts
+  * ![Private](screenshots/private_account.png)
 
 ---
 
