@@ -91,11 +91,9 @@ streamlit run app.py
 ## 📸 Screenshots
 
 *Add your screenshots here*
-
-```
+![Signup](images/signup.png)
 ![Home](images/home.png)
-![Profile](images/profile.png)
-```
+![Posts](images/posts.png)
 
 ---
 
