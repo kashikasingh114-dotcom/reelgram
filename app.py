@@ -3,8 +3,6 @@ import pandas as pd
 import os
 import json
 import time
-st.set_page_config(page_title="ReelGramm", layout="centered")
-
 # ---------------- CSS ----------------
 st.markdown("""
 <style>
@@ -15,7 +13,7 @@ st.markdown("""
 footer {visibility: hidden;}
 
 .block-container {
-    padding-top: 120px !important;
+    padding-top: 80px !important;
     max-width: 700px;
 }
 
@@ -26,6 +24,45 @@ footer {visibility: hidden;}
     box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 25px;
 }
+            /* INPUT FIELDS */
+div[data-testid="stTextInput"] input,
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stFileUploader"] section,
+div[data-testid="stRadio"] {
+    border: 2px solid #ddd !important;
+    border-radius: 12px !important;
+    padding: 10px !important;
+    background-color: #ffffff !important;
+}
+
+/* INPUT FOCUS (when user clicks) */
+div[data-testid="stTextInput"] input:focus,
+div[data-testid="stTextArea"] textarea:focus {
+    border: 2px solid #fd1d1d !important;
+    box-shadow: 0 0 6px rgba(253,29,29,0.3) !important;
+}
+
+/* BUTTONS (slightly toned down) */
+div.stButton > button {
+    background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 500;
+    height: 42px;
+}
+
+/* BUTTON HOVER */
+div.stButton > button:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+/* LABELS */
+label {
+    font-weight: 500 !important;
+    color: #333 !important;
+}
 
 .username {
     font-weight: 600;
@@ -33,20 +70,17 @@ footer {visibility: hidden;}
 
 .navbar-top {
     position: fixed;
-    top: 50px;
+    top: 0;
     left: 0;
     right: 0;
     height: 55px;
-    background: white;
-
+    background: white !important;
+    z-index: 9999;
     display: flex;
     align-items: center;
-    justify-content: space-between;  /* 🔥 KEY FIX */
-
-    padding: 0 15px;  /* spacing left-right */
-
+    justify-content: space-between;
+    padding: 0 15px;
     border-bottom: 1px solid #ddd;
-    z-index: 999;
 }
 .dp {
     width: 45px;
@@ -80,7 +114,34 @@ img {
 
 .brand-small {
     font-size: 26px;
-}                             
+}
+button {
+    background-color: white !important;
+    color: black !important;
+    border: 1px solid #ddd !important;
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+}
+
+button:hover {
+    background-color: #f2f2f2 !important;
+    color: black !important;
+}
+header {
+    visibility: hidden !important;
+}
+
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+#MainMenu {
+    visibility: hidden;
+}            
+div[data-testid="stTextInput"] input {
+    border-radius: 20px !important;
+    padding: 10px !important;
+}                                         
 </style>
 """, unsafe_allow_html=True)
 
@@ -103,6 +164,8 @@ posts = pd.read_csv(posts_file)
 # ---------------- SESSION ----------------
 if "page" not in st.session_state:
     st.session_state["page"] = "home"
+if "show_login" not in st.session_state:
+    st.session_state["show_login"] = False    
 if "user" not in st.session_state:
 
     st.markdown("""
@@ -159,12 +222,12 @@ if "user" not in st.session_state:
        color: gray;
        font-size: 16px;
        margin-top: 8px;
-    }                    
+    }                              
     </style>
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div style="margin-top:120px; text-align:center;">
+    <div style="margin-top:10px; text-align:center;">
     <div class="logo-box">
     <div class="logo-inner"></div>
     </div>
@@ -173,48 +236,87 @@ if "user" not in st.session_state:
     <div class="tagline">Want to have a ride to the reel world? 🚀</div>
     </div>
     """, unsafe_allow_html=True)
-
-    # BUTTON TO OPEN LOGIN
-    if st.button("Get Started 🚀"):
+    if not st.session_state["show_login"]:
+      if st.button("Get Started 🚀"):
         st.session_state["show_login"] = True
-
-    # ---------------- LOGIN SIDEBAR ----------------
+        st.rerun()
+    # ---------------- LOGIN SIDEBAR ---------------- 
+    st.markdown("""
+    <style>
+    div.stButton > button {
+       background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
+       color: white !important;
+       border: none !important;
+       border-radius: 12px !important;
+       font-weight: 600;
+       height: 45px;
+    }
+    div.stButton > button:hover {
+       opacity: 0.9;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     if st.session_state.get("show_login"):
-      st.sidebar.title("Login / Signup")
+        st.title("Login / Signup")
+        colA, colB = st.columns(2)
+        if "auth_mode" not in st.session_state:
+            st.session_state["auth_mode"] = "Login"
 
-      choice = st.sidebar.selectbox("", ["Login", "Signup"])
-      username = st.sidebar.text_input("Username")
-      password = st.sidebar.text_input("Password", type="password")
-
-      if choice == "Signup":
-        insta_name = st.sidebar.text_input("Name")
-        dp_file = st.sidebar.file_uploader("Upload DP", type=["jpg","png"])
-
-        if st.sidebar.button("Create"):
-            if username not in users["username"].values:
-                dp_path = ""
-                if dp_file:
-                    filename = dp_file.name.replace(" ", "_")
-                    dp_path = f"images/{int(time.time())}_{filename}"
-                    with open(dp_path, "wb") as f:
-                       f.write(dp_file.getbuffer())
-                new = pd.DataFrame([[username,password,dp_path,insta_name,json.dumps([]),False]],
-                columns=users.columns)
-                users = pd.concat([users,new])
-                users.to_csv(users_file,index=False)
-                st.success("Account created")
-
-      if choice == "Login":
-        if st.sidebar.button("Login"):
-            row = users[users["username"] == username]
-            if not row.empty and row.iloc[0]["password"] == password:
-                st.session_state["user"] = username
-                st.session_state["show_login"] = False
-                st.session_state["page"] = "home"   # 🔥 ADD THIS
+        with colA:
+            if st.button("Login", use_container_width=True):
+                st.session_state["auth_mode"] = "Login"
                 st.rerun()
-            else:
-                st.error("Invalid login")
 
+        with colB:
+            if st.button("Signup", use_container_width=True):
+               st.session_state["auth_mode"] = "Signup"
+               st.rerun()
+
+        choice = st.session_state["auth_mode"]
+            
+    # ---------------- LOGIN ----------------
+        if choice == "Login":
+                st.markdown("### Login")
+                username = st.text_input("Username", key="login_user")
+                password = st.text_input("Password", type="password", key="login_pass")
+                if st.button("Login 🚀", use_container_width=True):
+                    row = users[users["username"] == username]
+                    if not row.empty and row.iloc[0]["password"] == password:
+                       st.session_state["user"] = username
+                       st.session_state["page"] = "home"
+                       st.rerun()
+                    else:
+                       st.error("Invalid login ❌")
+# ---------------- SIGNUP ----------------
+        elif choice == "Signup":
+                st.markdown("### Create Account")
+                insta_name = st.text_input("Name", key="signup_name")
+                username = st.text_input("Username", key="signup_user")
+                password = st.text_input("Password", type="password", key="signup_pass")         
+                dp_file = st.file_uploader("Upload DP", type=["jpg","png"], key="signup_dp")
+                account_type = st.radio("Account Type", ["Public", "Private"])
+                if st.button("Create Account 🚀", use_container_width=True):
+                    if username not in users["username"].values:
+                        dp_path = ""
+                        if dp_file:
+                            filename = dp_file.name.replace(" ", "_")
+                            dp_path = f"images/{int(time.time())}_{filename}"
+                            with open(dp_path, "wb") as f:
+                                f.write(dp_file.getbuffer())
+
+                        is_private = True if account_type == "Private" else False
+
+                        new = pd.DataFrame([[username, password, dp_path, insta_name, json.dumps([]), is_private]],columns=users.columns)
+
+                        users = pd.concat([users, new])
+                        users.to_csv(users_file, index=False)
+
+                        st.success("Account created ✅")
+                    else:
+                        st.error("Username already exists ❌")
+
+    
+                st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
 # ---------------- FUNCTIONS ----------------
@@ -259,17 +361,15 @@ def can_view_profile(current_user, target_user):
         return False
 
     is_private = bool(target_row.iloc[0]["private"])
-    
+
+    # ✅ If account is PUBLIC → always visible
     if not is_private:
         return True
 
-    # check follow
+    # ✅ If account is PRIVATE → only visible if following
     following = get_following(current_user)
 
-    if target_user in following:
-        return True
-
-    return False
+    return target_user in following
 # ---------------- NAVBAR ----------------
 st.markdown("""
 <div class="navbar-top">
@@ -301,40 +401,44 @@ if st.session_state["page"] == "home":
             else:
                 st.write("👤")
         with col2:
-            st.markdown(f"**@{name}**")
+            st.markdown(f"""
+                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="font-weight:600;">@{name}</div>
+                </div>
+            """, unsafe_allow_html=True)
         if os.path.exists(str(row["image_path"])):
             st.image(row["image_path"], use_container_width=True)
 
         st.write(f"❤️ {row['likes']} likes")
 
-        col1, col2 = st.columns(2)
-
+        col1, col2, col3 = st.columns([1,1,6])
         with col1:
-            if st.button("Like", key=f"like_{i}"):
-                posts.at[i,"likes"] += 1
-                posts.to_csv(posts_file,index=False)
-                st.rerun()
-
+            if st.button("❤️", key=f"like_{i}"):
+               posts.at[i,"likes"] += 1
+               posts.to_csv(posts_file,index=False)
+               st.rerun()
         with col2:
-            if st.button("Comment", key=f"c_{i}"):
+            if st.button("💬", key=f"c_{i}"):
                 st.session_state["page"] = "comments"
                 st.session_state["selected_post"] = i
                 st.rerun()
-
-        st.write(f"**{row['username']}** {row['caption']}")
+        st.markdown("<hr style='border:0.5px solid #eee;'>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
-
 # ---------------- COMMENTS ----------------
 elif st.session_state["page"] == "comments":
 
     i = st.session_state.get("selected_post")
-
+ 
     row = posts.loc[i]
 
     if os.path.exists(str(row["image_path"])):
         st.image(row["image_path"])
 
-    st.write(f"**{row['username']}** {row['caption']}")
+    st.markdown(f"""
+       <div class="caption">
+       <b>{row['username']}</b> {row['caption']}
+       </div>
+       """, unsafe_allow_html=True)
 
     try:
         comments = json.loads(row["comments"])
@@ -370,49 +474,36 @@ elif st.session_state["page"] == "profile":
     idx = user_row.index[0]
     current_dp = user_row.iloc[0]["dp"]
     insta_name = user_row.iloc[0]["insta_name"] or current_user
-    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+    col1, col2 = st.columns([1,3])
+
     with col1:
         if current_dp and os.path.exists(current_dp):
-           st.image(current_dp, width=80)
+           st.image(current_dp, width=90)
         else:
            st.write("👤")
 
     with col2:
-      st.markdown(
-        f"""
-        <div style="text-align:center">
-            <div style="font-size:18px; font-weight:bold">{len(user_posts)}</div>
-            <div style="font-size:14px;">Posts</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-      )
+        c1, c2, c3 = st.columns(3)
 
-    with col3:
-      st.markdown(
-        f"""
-        <div style="text-align:center">
-            <div style="font-size:18px; font-weight:bold">{followers}</div>
-            <div style="font-size:14px;">Followers</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-      )
-
-    with col4:
-      st.markdown(
-        f"""
-        <div style="text-align:center">
-            <div style="font-size:18px; font-weight:bold">{following}</div>
-            <div style="font-size:14px;">Following</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-      )
-# NAME BELOW
-    st.markdown(f"### {insta_name}")
+        with c1:
+            if st.button(f"{len(user_posts)}\nPosts", key="my_posts_btn"):
+               st.session_state["view_user"] = current_user
+               st.session_state["page"] = "profile" 
+        with c2:
+            if st.button(f"{followers}\nFollowers", key="my_followers_btn"):
+                st.session_state["view_user"] = current_user
+                st.session_state["page"] = "followers"
+                st.rerun()
+        with c3:
+            if st.button(f"{following}\nFollowing"):
+               st.session_state["page"] = "following"
+               st.rerun()
+    if st.button("⬅ Back", key="back_profile"):
+       st.session_state["page"] = "home"
+       st.rerun()           
     # ---------------- DP SECTION ----------------
     st.markdown("### DP UPLOAD")
+
 
     # Upload new DP
     new_dp = st.file_uploader("Upload new DP", type=["jpg","png"])
@@ -458,9 +549,9 @@ elif st.session_state["page"] == "profile":
                 path = str(row["image_path"]).strip()
   
                 if path and os.path.exists(path):
-                    st.image(path, use_container_width=True)
+                    st.image(path, width="stretch")
 
-                    if st.button(" ", key=f"post_click_{i}"):
+                    if st.button("open", key=f"post_click_{i}"):
                        st.session_state["page"] = "view_post"
                        st.session_state["selected_post"] = row["index"]
                        st.rerun()
@@ -472,26 +563,71 @@ elif st.session_state["page"] == "profile":
 # ---------------- SEARCH ----------------
 elif st.session_state["page"] == "search":
 
-    query = st.text_input("Search")
+    st.subheader("Search")
 
-    if query:
-        results = users[
-            users["username"].str.contains(query, case=False, na=False) |
-            users["insta_name"].str.contains(query, case=False, na=False)
-        ]
-        
-        for _, row in results.iterrows():
-            target_user = row["username"]
-            st.write(f"@{row['username']} - {row['insta_name']}")
-            if st.button(f"View {target_user}", key=f"view_{target_user}"):
-                if can_view_profile(st.session_state["user"], target_user):
-                    st.session_state["page"] = "view_profile"
-                else:
-                    st.session_state["page"] = "private_profile"
-                st.session_state["target_profile"] = target_user
-                st.rerun()
+    # INIT STATE
+    if "search_done" not in st.session_state:
+        st.session_state["search_done"] = False
+    if "search_query" not in st.session_state:
+        st.session_state["search_query"] = ""
 
+    col1, col2 = st.columns([6,1])
+
+    with col1:
+        query = st.text_input("Search",placeholder="Search users",key="search_input",label_visibility="collapsed")
+
+    with col2:
+        if st.button("🔍"):
+            st.session_state["search_done"] = True
+            st.session_state["search_query"] = query
+
+    # RUN SEARCH FROM STATE (NOT BUTTON)
+    if st.session_state["search_done"]:
+
+        query = st.session_state["search_query"]
+
+        if not query.strip():
+            st.warning("Type something to search 😅")
+
+        else:
+            results = users[
+                users["username"].str.contains(query, case=False, na=False) |
+                users["insta_name"].str.contains(query, case=False, na=False)
+            ]
+
+            if results.empty:
+                st.warning("No user found 😔")
+
+            else:
+                for _, row in results.iterrows():
+
+                    target_user = row["username"]
+
+                    col1, col2 = st.columns([1,6])
+
+                    with col1:
+                        if row["dp"] and os.path.exists(row["dp"]):
+                            st.image(row["dp"], width=40)
+                        else:
+                            st.write("👤")
+
+                    with col2:
+                        if st.button(
+                            f"{row['insta_name'] or row['username']}",
+                            key=f"user_click_{target_user}"
+                        ):
+                            st.session_state["target_profile"] = target_user
+
+                            if can_view_profile(st.session_state["user"], target_user):
+                                st.session_state["page"] = "view_profile"
+                            else:
+                                st.session_state["page"] = "private_profile"
+
+                            st.rerun()
+
+    # BACK
     if st.button("⬅ Back"):
+        st.session_state["search_done"] = False
         st.session_state["page"] = "home"
         st.rerun()
 # ---------------- NEW POST ----------------
@@ -532,34 +668,42 @@ elif st.session_state["page"] == "new_post":
         st.rerun()
 #--------followers-------        
 elif st.session_state["page"] == "followers":
-    current_user = st.session_state["user"]   
+    current_user = st.session_state.get("view_user")
     st.subheader("Followers")
-
+    found = False
     for _, row in users.iterrows():
         try:
-            following = json.loads(row["following"])
+           following = json.loads(row["following"])
         except:
-            following = []
-
+           following = []
         if current_user in following:
-            st.write(f"@{row['username']}")
-
-    if st.button("⬅ Back"):
-        st.session_state["page"] = "profile"
-        st.rerun()  
+           st.write(f"@{row['username']}")
+           found = True
+    if not found:
+        st.write("No followers yet 😔")
+    if st.button("⬅ Back", key="back_followers"):
+      if st.session_state.get("view_user") == st.session_state["user"]:
+        st.session_state["page"] = "profile"   # my profile
+      else:
+        st.session_state["page"] = "view_profile"  # Y profile
+      st.rerun()  
 #------following----------------
 elif st.session_state["page"] == "following":
-    current_user = st.session_state["user"]
+    current_user = st.session_state.get("view_user")
     st.subheader("Following")
-
-    following = get_following(current_user)
-
-    for user in following:
+    following_list = get_following(current_user)
+    if not following_list:
+       st.write("Not following anyone yet 😔")
+    else:
+       for user in following_list:
         st.write(f"@{user}")
 
-    if st.button("⬅ Back"):
+    if st.button("⬅ Back", key="back_following"):
+      if st.session_state.get("view_user") == st.session_state["user"]:
         st.session_state["page"] = "profile"
-        st.rerun()  
+      else:
+        st.session_state["page"] = "view_profile"
+      st.rerun()  
 #---------POSTS---------------------          
 elif st.session_state["page"] == "view_post":
 
@@ -573,7 +717,7 @@ elif st.session_state["page"] == "view_post":
         # Image
         path = str(row["image_path"]).strip()
         if path and os.path.exists(path):
-            st.image(path, use_container_width=True)
+            st.image(path, width="stretch")
 
         # Caption
         st.markdown(f"**{row['username']}** {row['caption']}")
@@ -607,27 +751,71 @@ elif st.session_state["page"] == "view_post":
                 posts.to_csv(posts_file, index=False)
                 st.rerun()
 
-    if st.button("⬅ Back"):
-        st.session_state["page"] = "profile"
-        st.rerun() 
+    if st.button("⬅ Back", key="back_post"):
+       st.session_state["page"] = "profile"
+       st.rerun() 
 
 #-----------Private----------
 elif st.session_state["page"] == "private_profile":
-
+    
     target_user = st.session_state["target_profile"]
     row = users[users["username"] == target_user].iloc[0]
 
-    st.image(row["dp"] if row["dp"] and os.path.exists(row["dp"]) else None, width=100)
+    followers = get_followers(target_user)
+    following = get_following_count(target_user)
+    user_posts = posts[posts["username"] == target_user]
 
-    st.write(f"@{row['username']}")
-    st.write(f"Followers: {get_followers(target_user)}")
-    st.write(f"Following: {get_following_count(target_user)}")
+    col1, col2 = st.columns([1,3])
 
-    st.warning("🔒 This account is private")
+    # DP
+    with col1:
+        if row["dp"] and os.path.exists(row["dp"]):
+            st.image(row["dp"], width=90)
+        else:
+            st.write("👤")
 
-    if st.button("⬅ Back"):
-        st.session_state["page"] = "search"
-        st.rerun()
+    # STATS (NOT clickable)
+    with col2:
+        c1, c2, c3 = st.columns(3)
+        c1.markdown(f"**{len(user_posts)}**  \nPosts")
+        c2.markdown(f"**{followers}**  \nFollowers")
+        c3.markdown(f"**{following}**  \nFollowing")
+
+    st.markdown(f"### @{target_user}")
+    current_user = st.session_state["user"]
+
+    if can_view_profile(current_user, target_user):
+       st.session_state["page"] = "view_profile"
+       st.rerun()
+    is_following = target_user in get_following(current_user)
+    if is_following:
+        if st.button("Unfollow", key=f"unfollow_private_{target_user}"):
+           toggle_follow(current_user, target_user)
+           st.rerun()
+    else:
+        if st.button("Follow", key=f"follow_private_{target_user}"):
+           toggle_follow(current_user, target_user)
+           st.session_state["page"] = "view_profile"
+           st.rerun()
+
+    # 🔒 PRIVATE BOX (clean like Insta)
+    st.markdown("""
+    <div style="
+        margin-top:20px;
+        padding:15px;
+        border-radius:12px;
+        background:#1e1e1e;
+        color:white;
+        text-align:center;
+    ">
+        🔒 Private account <br>
+        Follow this account to see their posts
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("⬅ Back", key="back_private"):
+       st.session_state["page"] = "search"
+       st.rerun()
 
 #------------Public-----------------------------
 elif st.session_state["page"] == "view_profile":
@@ -637,11 +825,42 @@ elif st.session_state["page"] == "view_profile":
     user_posts = posts[posts["username"] == target_user]
     row = users[users["username"] == target_user].iloc[0]
 
-    st.image(row["dp"] if row["dp"] else "", width=100)
-    st.write(f"@{target_user}")
-
-    st.write("Followers:", get_followers(target_user))
-    st.write("Following:", get_following_count(target_user))
+    col1, col2 = st.columns([1,3])
+    # DP
+    with col1:
+        if row["dp"] and os.path.exists(row["dp"]):
+          st.image(row["dp"], width=90)
+        else:
+          st.write("👤")
+    # STATS (CLICKABLE like real insta)
+    with col2:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            if st.button(f"{len(user_posts)}\nPosts", key=f"posts_{target_user}"):
+                st.session_state["view_user"] = target_user
+                st.session_state["page"] = "view_profile" 
+        with c2:
+            if st.button(f"{get_followers(target_user)}\nFollowers"):
+               st.session_state["view_user"] = target_user
+               st.session_state["page"] = "followers"
+               st.rerun()
+        with c3:
+            if st.button(f"{get_following_count(target_user)}\nFollowing"):
+               st.session_state["view_user"] = target_user
+               st.session_state["page"] = "following"
+               st.rerun()
+    # USERNAME BELOW
+    st.markdown(f"### @{target_user}")
+    current_user = st.session_state["user"]
+    is_following = target_user in get_following(current_user)
+    if is_following:
+        if st.button("Unfollow", key=f"unfollow_{target_user}"):
+           toggle_follow(current_user, target_user)
+           st.rerun()
+    else:
+        if st.button("Follow", key=f"follow_{target_user}"):
+           toggle_follow(current_user, target_user)
+           st.rerun()
 
     st.subheader("Posts")
 
@@ -650,9 +869,9 @@ elif st.session_state["page"] == "view_profile":
             st.image(p["image_path"], use_container_width=True)
             st.write(p["caption"])
 
-    if st.button("⬅ Back"):
-        st.session_state["page"] = "search"
-        st.rerun()
+    if st.button("⬅ Back", key="back_public"):
+       st.session_state["page"] = "search"
+       st.rerun()
 # ---------------- NAV ----------------
 st.markdown("---")
 col1, col2, col3, col4 = st.columns(4)
@@ -668,11 +887,11 @@ with col2:
         st.rerun()
 
 with col3:
-    if st.button("👤"):
+    if st.button("👤", key="nav_profile"):
         st.session_state["page"] = "profile"
         st.rerun()
 
 with col4:
-    if st.button("🔍"):
+    if st.button("🔍", key="nav_search"):
         st.session_state["page"] = "search"
         st.rerun()
