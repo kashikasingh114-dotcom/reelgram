@@ -85,16 +85,6 @@ pip install streamlit pandas
 ```bash
 streamlit run app.py
 ```
-
----
-
-## 📸 Screenshots
-
-*Add your screenshots here*
-![Signup](images/signup.png)
-![Home](images/home.png)
-![Posts](images/posts.png)
-
 ---
 
 ## 💡 Future Improvements
